@@ -71,7 +71,6 @@ public class AuthController {
         user.setRoles(roles);
 
         userRepository.save(user);
-
         return ResponseEntity.ok("User registered successfully");
     }
 
@@ -95,7 +94,6 @@ public class AuthController {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
         String token = jwtUtil.generateToken(userDetails);
-
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
@@ -112,6 +110,7 @@ public class AuthController {
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("username", username);
         userInfo.put("roles", jwtUtil.extractRoles(token));
+
         return ResponseEntity.ok(userInfo);
     }
 }
