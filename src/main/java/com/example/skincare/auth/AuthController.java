@@ -112,6 +112,7 @@ public class AuthController {
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("username", username);
         userInfo.put("roles", jwtUtil.extractRoles(token));
+
         return ResponseEntity.ok(userInfo);
     }
 }
