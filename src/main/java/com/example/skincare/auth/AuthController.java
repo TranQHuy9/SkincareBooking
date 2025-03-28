@@ -94,6 +94,7 @@ public class AuthController {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
         String token = jwtUtil.generateToken(userDetails);
+
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
@@ -102,7 +103,6 @@ public class AuthController {
         String token = authorization.replace("Bearer ", "");
         String username = jwtUtil.extractUsername(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
         if (!jwtUtil.validateToken(token, userDetails)) {
             return ResponseEntity.status(401).body("Invalid token");
         }
