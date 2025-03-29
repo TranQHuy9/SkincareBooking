@@ -71,6 +71,7 @@ public class AuthController {
         user.setRoles(roles);
 
         userRepository.save(user);
+
         return ResponseEntity.ok("User registered successfully");
     }
 
@@ -103,6 +104,7 @@ public class AuthController {
         String token = authorization.replace("Bearer ", "");
         String username = jwtUtil.extractUsername(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
         if (!jwtUtil.validateToken(token, userDetails)) {
             return ResponseEntity.status(401).body("Invalid token");
         }
