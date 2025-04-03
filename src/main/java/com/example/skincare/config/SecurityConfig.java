@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép truy cập công khai vào file tĩnh và Swagger
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/", "/index.html", "/login.html", "/register.html", "/style.css", "/script.js", "/skin-quiz.html", "/blog.htm").permitAll()
+                        .requestMatchers("/", "/index.html", "/login.html", "/register.html", "/style.css", "/script.js", "/skin-quiz.html", "/blog.html", "/booking.html","/dashboard.html", "/profile.html, /therapist.html").permitAll()
                         .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                         .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/therapist/**").hasRole("THERAPIST")
