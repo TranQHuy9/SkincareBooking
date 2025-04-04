@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Skincare Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/index.html">Skincare Center</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/skin-quiz.html">Skin Quiz</a></li>
+                <li class="nav-item"><a class="nav-link" href="/booking.html">Book a Service</a></li>
+                <li class="nav-item"><a class="nav-link" href="/therapist.html">Our Therapists</a></li>
+                <li class="nav-item"><a class="nav-link" href="/blog.html">Blog & News</a></li>
+                <li class="nav-item"><a class="nav-link" href="/profile.html">Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="/login.html">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Profile Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Your Profile</h2>
+        <div class="card shadow p-4 mb-4">
+            <h3>Personal Information</h3>
+            <p><strong>Username:</strong> <span id="username"></span></p>
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <p><strong>Full Name:</strong> <span id="fullName"></span></p>
+        </div>
+        <div class="card shadow p-4 mb-4">
+            <h3>Booking History</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Service</th>
+                    <th>Therapist</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                    <th>Feedback</th>
+                </tr>
+                </thead>
+                <tbody id="bookingHistory">
+                <!-- Booking history will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+        <div class="card shadow p-4">
+            <h3>Submit Feedback</h3>
+            <form id="feedbackForm">
+                <div class="mb-3">
+                    <label for="bookingId" class="form-label">Select Booking</label>
+                    <select class="form-select" id="bookingId" required>
+                        <option value="" disabled selected>Select a booking</option>
+                        <!-- Bookings will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="rating" class="form-label">Rating</label>
+                    <select class="form-select" id="rating" required>
+                        <option value="" disabled selected>Select a rating</option>
+                        <option value="1">1 Star</option>
+                        <option value="2">2 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="5">5 Stars</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="feedback" class="form-label">Feedback</label>
+                    <textarea class="form-control" id="feedback" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Feedback</button>
+            </form>
+            <div id="feedbackMessage" class="alert mt-3" style="display: none;"></div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/script.js"></script>
+</body>
+</html>
