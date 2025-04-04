@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Skincare Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/index.html">Skincare Center</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Dashboard Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Admin Dashboard</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card shadow text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Bookings</h5>
+                        <p class="card-text display-6" id="totalBookings">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card shadow text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Revenue</h5>
+                        <p class="card-text display-6" id="totalRevenue">$0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card shadow text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Average Rating</h5>
+                        <p class="card-text display-6" id="averageRating">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow p-4">
+            <h3>Recent Feedback</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Customer</th>
+                    <th>Rating</th>
+                    <th>Feedback</th>
+                </tr>
+                </thead>
+                <tbody id="recentFeedback">
+                <!-- Feedback will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/script.js"></script>
+</body>
+</html>
