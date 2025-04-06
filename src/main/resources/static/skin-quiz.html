@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skin Quiz - Skincare Center</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
-
 </head>
 <body>
 <!-- Navbar -->
@@ -35,54 +33,56 @@
 <section class="py-5">
     <div class="container">
         <h2 class="text-center mb-4">Skin Quiz</h2>
-        <p class="text-center mb-5">Answer a few questions to find the best skincare services for you.</p>
-        <form id="skinQuizForm">
-            <div class="mb-4">
-                <label class="form-label">1. What is your skin type?</label>
-                <select class="form-select" name="skinType" required>
-                    <option value="" disabled selected>Select your skin type</option>
-                    <option value="oily">Oily</option>
-                    <option value="dry">Dry</option>
-                    <option value="combination">Combination</option>
-                    <option value="normal">Normal</option>
-                </select>
+        <p class="text-center mb-5">Answer a few questions to find the best skincare services for you</p>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form id="quizForm">
+                    <div class="card shadow-sm p-4">
+                        <div class="mb-3">
+                            <label for="skinType" class="form-label">1. What is your skin type?</label>
+                            <select class="form-select" id="skinType" required>
+                                <option value="" disabled selected>Select your skin type</option>
+                                <option value="Oily">Oily</option>
+                                <option value="Dry">Dry</option>
+                                <option value="Combination">Combination</option>
+                                <option value="Normal">Normal</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">2. What are your main skin concerns?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="skinConcern" value="Acne" id="acne">
+                                <label class="form-check-label" for="acne">Acne</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="skinConcern" value="Dryness" id="dryness">
+                                <label class="form-check-label" for="dryness">Dryness</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="skinConcern" value="Aging" id="aging">
+                                <label class="form-check-label" for="aging">Aging</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sensitivity" class="form-label">3. How often do you experience sensitivity?</label>
+                            <select class="form-select" id="sensitivity" required>
+                                <option value="" disabled selected>Select an option</option>
+                                <option value="Often">Often</option>
+                                <option value="Sometimes">Sometimes</option>
+                                <option value="Rarely">Rarely</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Get Recommendations</button>
+                    </div>
+                </form>
+                <div id="quizResult" style="display: none;"></div>
             </div>
-            <div class="mb-4">
-                <label class="form-label">2. What are your main skin concerns?</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="concerns" value="acne">
-                    <label class="form-check-label">Acne</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="concerns" value="dryness">
-                    <label class="form-check-label">Dryness</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="concerns" value="aging">
-                    <label class="form-check-label">Aging</label>
-                </div>
-            </div>
-            <div class="mb-4">
-                <label class="form-label">3. How often do you experience sensitivity?</label>
-                <select class="form-select" name="sensitivity" required>
-                    <option value="" disabled selected>Select an option</option>
-                    <option value="often">Often</option>
-                    <option value="sometimes">Sometimes</option>
-                    <option value="rarely">Rarely</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Get Recommendations</button>
-        </form>
-        <div id="recommendations" class="mt-4" style="display: none;">
-            <h3>Recommended Services</h3>
-            <ul id="recommendedServices" class="list-group"></ul>
-            <a href="/booking.html" class="btn btn-success mt-3">Book Now</a>
         </div>
     </div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/script.js"></script>
 </body>
 </html>
