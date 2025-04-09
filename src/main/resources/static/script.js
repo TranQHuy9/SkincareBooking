@@ -108,33 +108,6 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Hiển thị thông tin người dùng
-async function displayUserInfo(token) {
-    try {
-        const response = await axios.get('http://localhost:8090/api/auth/user', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        document.getElementById('username').textContent = response.data.username;
-        document.getElementById('roles').textContent = response.data.roles.join(', ');
-    } catch (error) {
-        console.error('Lỗi khi lấy thông tin người dùng:', error.message);
-        console.error('Chi tiết lỗi:', error.response?.data);
-        console.error('Mã trạng thái:', error.response?.status);
-        if (error.response?.status === 401) {
-            alert('Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.');
-            localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            localStorage.removeItem('role');
-            window.location.href = '/login.html';
-        } else if (error.response?.status === 403) {
-            alert('Bạn không có quyền truy cập thông tin người dùng. Vui lòng liên hệ quản trị viên.');
-        }
-    }
-}
-
 // Xử lý đăng xuất
 document.getElementById('logoutBtn')?.addEventListener('click', () => {
     localStorage.removeItem('token');
@@ -295,4 +268,345 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
+// Skin-quiz.html: Xử lý trắc nghiệm da (client-side logic)
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname.endsWith('skin-quiz.html')) {
+        const quizForm = document.getElementById('quizForm');
+        const resultDiv = document.getElementById('quizResult');
+
+        quizForm?.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const skinType = document.getElementById('skinType').value;
+            const skinConcern = Array.from(document.querySelectorAll('input[name="skinConcern"]:checked'))
+                .map(checkbox => checkbox.value);
+            const sensitivity = document.getElementById('sensitivity').value;
+
+            let recommendedService = '';
+
+            if (skinType === 'Oily') {
+                if (skinConcern.includes('Acne')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Soothing Acne Treatment'
+                        : 'Acne Treatment Facial';
+                } else if (skinConcern.includes('Dryness')) {
+                    recommendedService = 'Balancing Hydration Facial';
+                } else if (skinConcern.includes('Aging')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Gentle Anti-Aging Facial'
+                        : 'Anti-Aging Facial';
+                }
+            } else if (skinType === 'Dry') {
+                if (skinConcern.includes('Acne')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Soothing Acne Treatment'
+                        : 'Acne Treatment Facial';
+                } else if (skinConcern.includes('Dryness')) {
+                    recommendedService = 'Intensive Hydration Therapy';
+                } else if (skinConcern.includes('Aging')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Gentle Anti-Aging Facial'
+                        : 'Collagen Boosting Treatment';
+                }
+            } else if (skinType === 'Combination') {
+                if (skinConcern.includes('Acne')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Soothing Acne Treatment'
+                        : 'Acne Treatment Facial';
+                } else if (skinConcern.includes('Dryness')) {
+                    recommendedService = 'Balancing Hydration Facial';
+                } else if (skinConcern.includes('Aging')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Gentle Anti-Aging Facial'
+                        : 'Anti-Aging Facial';
+                }
+            } else if (skinType === 'Normal') {
+                if (skinConcern.includes('Acne')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Soothing Acne Treatment'
+                        : 'Acne Treatment Facial';
+                } else if (skinConcern.includes('Dryness')) {
+                    recommendedService = 'Classic Hydrating Facial';
+                } else if (skinConcern.includes('Aging')) {
+                    recommendedService = sensitivity === 'Often'
+                        ? 'Gentle Anti-Aging Facial'
+                        : 'Vitamin C Infusion';
+                }
+            }
+
+            if (recommendedService) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success mt-4">
+                        <h5>Recommended Service:</h5>
+                        <p>${recommendedService}</p>
+                        <a href="/booking.html?service=${encodeURIComponent(recommendedService)}" class="btn btn-primary">Book This Service</a>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-warning mt-4">
+                        <p>No suitable service found. Please try again or contact us for a consultation.</p>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+            }
+        });
+    }
+});
+
+// Booking.html: Tải dữ liệu cho form đặt dịch vụ và xử lý form
+document.addEventListener('DOMContentLoaded', async () => {
+    if (window.location.pathname.endsWith('booking.html')) {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('role');
+        if (!token) {
+            console.warn('Không tìm thấy token. Chuyển hướng về login.html');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const serviceSelect = document.getElementById('service');
+        if (!serviceSelect) {
+            console.error('Không tìm thấy phần tử dropdown với id="service"');
+            return;
+        }
+
+        const therapistSelect = document.getElementById('therapist');
+        if (!therapistSelect) {
+            console.error('Không tìm thấy phần tử dropdown với id="therapist"');
+            return;
+        }
+
+        // Tải danh sách dịch vụ
+        try {
+            console.log('Gọi API để tải danh sách dịch vụ');
+            const response = await axios.get('http://localhost:8090/api/services', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const services = response.data;
+
+            if (!Array.isArray(services) || services.length === 0) {
+                console.error('Không có dịch vụ nào được trả về từ API /api/services');
+                serviceSelect.innerHTML = '<option value="" disabled selected>No services available</option>';
+                return;
+            }
+
+            serviceSelect.innerHTML = '<option value="" disabled selected>Select a service</option>';
+            services.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = service.name;
+                serviceSelect.appendChild(option);
+            });
+
+            // Tự động chọn dịch vụ từ query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const recommendedService = urlParams.get('service');
+            if (recommendedService) {
+                const matchingOption = Array.from(serviceSelect.options).find(
+                    option => option.textContent === recommendedService
+                );
+                if (matchingOption) {
+                    serviceSelect.value = matchingOption.value;
+                    serviceSelect.dispatchEvent(new Event('change'));
+                } else {
+                    console.warn(`Không tìm thấy dịch vụ "${recommendedService}" trong danh sách`);
+                }
+            }
+        } catch (error) {
+            console.error('Lỗi khi tải danh sách dịch vụ:', error.message);
+            console.error('Chi tiết lỗi:', error.response?.data);
+            serviceSelect.innerHTML = '<option value="" disabled selected>Error loading services</option>';
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                console.warn('Quyền truy cập bị từ chối. Chuyển hướng về login.html');
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+                setTimeout(() => (window.location.href = '/login.html'), 2000);
+            }
+        }
+
+        // Cập nhật danh sách therapist khi chọn dịch vụ
+        serviceSelect.addEventListener('change', async function () {
+            const serviceId = this.value;
+            therapistSelect.innerHTML = '<option value="">No preference</option>';
+
+            if (!serviceId) {
+                console.log('Không có serviceId. Đặt lại danh sách therapist về mặc định');
+                return;
+            }
+
+            try {
+                console.log(`Gọi API để lấy danh sách therapist cho serviceId: ${serviceId}`);
+                const response = await axios.get(`http://localhost:8090/api/therapists/by-service?serviceId=${serviceId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const therapists = response.data;
+
+                console.log('Danh sách therapist trả về:', therapists);
+
+                if (!Array.isArray(therapists) || therapists.length === 0) {
+                    console.warn(`Không có therapist nào cho serviceId: ${serviceId}`);
+                    therapistSelect.innerHTML = '<option value="">No therapists available</option>';
+                    return;
+                }
+
+                therapists.forEach(therapist => {
+                    const option = document.createElement('option');
+                    option.value = therapist.id;
+                    option.textContent = `${therapist.fullName || 'Unknown Therapist'} (${therapist.expertise || 'Unknown Specialty'})`;
+                    therapistSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Lỗi khi tải danh sách chuyên viên:', error.message);
+                console.error('Chi tiết lỗi:', error.response?.data);
+                console.error('Mã trạng thái:', error.response?.status);
+                therapistSelect.innerHTML = '<option value="">Error loading therapists</option>';
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    console.warn('Quyền truy cập bị từ chối. Chuyển hướng về login.html');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('role');
+                    setTimeout(() => (window.location.href = '/login.html'), 2000);
+                }
+            }
+        });
+
+        // Tải danh sách khung giờ
+        const timeSelect = document.getElementById('time');
+        if (!timeSelect) {
+            console.error('Không tìm thấy phần tử dropdown với id="time"');
+            return;
+        }
+        timeSelect.innerHTML = '<option value="" disabled selected>Select a time</option>';
+        const times = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+        times.forEach(time => {
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            timeSelect.appendChild(option);
+        });
+
+// Xử lý form đặt lịch
+        document.getElementById('bookingForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const serviceId = document.getElementById('service').value;
+            const therapistId = document.getElementById('therapist').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+
+            if (!serviceId || !date || !time) {
+                alert('Vui lòng điền đầy đủ các trường bắt buộc (Dịch vụ, Ngày, Giờ).');
+                return;
+            }
+
+            if (!therapistId) {
+                alert('Vui lòng chọn một chuyên viên.');
+                return;
+            }
+
+            // Kiểm tra serviceId có hợp lệ không
+            if (isNaN(serviceId) || serviceId <= 0) {
+                alert('ID dịch vụ không hợp lệ. Vui lòng chọn lại dịch vụ.');
+                return;
+            }
+
+            // Kiểm tra therapistId có hợp lệ không
+            if (isNaN(therapistId) || therapistId <= 0) {
+                alert('ID chuyên viên không hợp lệ. Vui lòng chọn lại chuyên viên.');
+                return;
+            }
+
+            const bookingTime = `${date}T${time}:00`;
+            try {
+                console.log('Gửi yêu cầu đặt lịch với payload:', {
+                    serviceId: serviceId,
+                    therapistId: therapistId,
+                    bookingTime: bookingTime,
+                    status: "PENDING"
+                });
+                const response = await axios.post('http://localhost:8090/api/bookings', {
+                    serviceId: serviceId,
+                    therapistId: therapistId, // Thêm therapistId vào payload
+                    bookingTime: bookingTime,
+                    status: "PENDING"
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                const bookingMessage = document.getElementById('bookingMessage');
+                if (bookingMessage) {
+                    bookingMessage.className = 'alert alert-success mt-4';
+                    bookingMessage.textContent = 'Đặt dịch vụ thành công!';
+                    bookingMessage.style.display = 'block';
+                    setTimeout(() => (window.location.href = '/profile.html'), 2000);
+                }
+            } catch (error) {
+                console.error('Lỗi khi đặt dịch vụ:', error.message);
+                console.error('Chi tiết lỗi:', error.response?.data);
+                console.error('Mã trạng thái:', error.response?.status);
+                const bookingMessage = document.getElementById('bookingMessage');
+                if (bookingMessage) {
+                    bookingMessage.className = 'alert alert-danger mt-4';
+                    bookingMessage.style.display = 'block';
+                    if (error.response?.status === 400) {
+                        bookingMessage.textContent = error.response?.data || 'Dữ liệu gửi không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+                    } else if (error.response?.status === 401 || error.response?.status === 403) {
+                        const token = localStorage.getItem('token');
+                        if (token) {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            const currentTime = Math.floor(Date.now() / 1000);
+                            if (payload.exp < currentTime) {
+                                bookingMessage.textContent = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+                                setTimeout(() => {
+                                    localStorage.removeItem('token');
+                                    localStorage.removeItem('username');
+                                    localStorage.removeItem('role');
+                                    window.location.href = '/login.html';
+                                }, 2000);
+                                return;
+                            }
+                        }
+                        bookingMessage.textContent = 'Bạn không có quyền đặt lịch. Vui lòng liên hệ quản trị viên.';
+                    } else {
+                        bookingMessage.textContent = error.response?.data || 'Đặt dịch vụ thất bại. Vui lòng thử lại.';
+                    }
+                }
+            }
+        });
+
+        // Tải danh sách lịch đặt cho admin
+        if (userRole === 'ADMIN') {
+            try {
+                const response = await axios.get('http://localhost:8090/api/bookings', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const bookingsList = document.getElementById('bookingsList');
+                response.data.forEach(booking => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${booking.id}</td>
+                        <td>${booking.customer?.username || 'N/A'}</td>
+                        <td>${booking.service?.name || 'N/A'}</td>
+                        <td>${booking.therapist?.fullName || 'Chưa phân công'}</td>
+                        <td>${booking.bookingTime || 'N/A'}</td>
+                        <td>${booking.status}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="checkIn(${booking.id})">Check-In</button>
+                            <button class="btn btn-sm btn-success" onclick="checkOut(${booking.id})">Check-Out</button>
+                            <button class="btn btn-sm btn-danger" onclick="cancelBooking(${booking.id})">Hủy</button>
+                        </td>
+                    `;
+                    bookingsList.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Lỗi khi tải danh sách lịch đặt:', error);
+            }
+        }
+    }
+});
+
+
 
