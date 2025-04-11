@@ -608,5 +608,155 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Therapist.html: Tải và quản lý chuyên viên
+document.addEventListener('DOMContentLoaded', async () => {
+    if (window.location.pathname.endsWith('therapist.html')) {
+        const token = localStorage.getItem('token');
+        // Tải danh sách chuyên viên
+        try {
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            const response = await axios.get('http://localhost:8090/api/therapists', config);
+            const therapistsList = document.getElementById('therapistsList');
+            response.data.forEach(therapist => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-4';
+                col.innerHTML = `
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h5 class="card-title">${therapist.fullName || 'Unknown Therapist'}</h5>
+                            <p><strong>Chuyên môn:</strong> ${therapist.expertise || 'N/A'}</p>
+                            <p><strong>Kinh nghiệm:</strong> ${therapist.experience || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+                therapistsList.appendChild(col);
+            });
+        } catch (error) {
+            console.error('Lỗi khi tải danh sách chuyên viên:', error.message);
+            console.error('Chi tiết lỗi:', error.response?.data);
+            console.error('Mã trạng thái:', error.response?.status);
+            const therapistsList = document.getElementById('therapistsList');
+            therapistsList.innerHTML = '<div class="col-12 text-center text-danger">Lỗi khi tải danh sách chuyên viên</div>';
+            if (error.response?.status === 401) {
+                alert('Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+                setTimeout(() => (window.location.href = '/login.html'), 2000);
+            } else if (error.response?.status === 403) {
+                therapistsList.innerHTML = '<div class="col-12 text-center text-danger">Bạn không có quyền truy cập danh sách chuyên viên.</div>';
+            }
+        }
+    }
+});
+
+// Hiển thị thông tin người dùng
+async function displayUserInfo(token) {
+    try {
+        const response = await axios.get('http://localhost:8090/api/auth/user', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        document.getElementById('username').textContent = response.data.username || 'N/A';
+        document.getElementById('email').textContent = response.data.email || 'N/A';
+        document.getElementById('fullName').textContent = response.data.fullName || 'N/A';
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin người dùng:', error.message);
+        console.error('Chi tiết lỗi:', error.response?.data);
+        console.error('Mã trạng thái:', error.response?.status);
+        const personalInfo = document.querySelector('.card.shadow.p-4.mb-4');
+        personalInfo.innerHTML += '<p class="text-danger">Lỗi khi tải thông tin người dùng. Vui lòng thử lại sau.</p>';
+        if (error.response?.status === 401) {
+            alert('Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('role');
+            window.location.href = '/login.html';
+        } else if (error.response?.status === 403) {
+            alert('Bạn không có quyền truy cập thông tin người dùng. Vui lòng liên hệ quản trị viên.');
+        }
+    }
+}
+
+// Profile.html: Tải thông tin người dùng, lịch sử đặt dịch vụ, và xử lý phản hồi
+document.addEventListener('DOMContentLoaded', async () => {
+    if (window.location.pathname.endsWith('profile.html')) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.warn('Không tìm thấy token. Chuyển hướng về login.html');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        // Kiểm tra thời gian hết hạn của token trước khi gửi yêu cầu
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Math.floor(Date.now() / 1000);
+            if (payload.exp < currentTime) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+                window.location.href = '/login.html';
+                return;
+            }
+        } catch (e) {
+            console.error('Lỗi khi giải mã token:', e);
+            alert('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('role');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        // Tải thông tin người dùng
+        await displayUserInfo(token);
+
+        // Tải lịch sử đặt dịch vụ
+        try {
+            const response = await axios.get('http://localhost:8090/api/bookings', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const bookingHistory = document.getElementById('bookingHistory');
+            const bookingSelect = document.getElementById('bookingId');
+            response.data.forEach(booking => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${booking.id}</td>
+                    <td>${booking.service?.name || 'N/A'}</td>
+                    <td>${booking.therapist?.fullName || 'Chưa phân công'}</td>
+                    <td>${booking.bookingTime || 'N/A'}</td>
+                    <td>${booking.status}</td>
+                    <td>${booking.feedback || 'Chưa có phản hồi'}</td>
+                `;
+                bookingHistory.appendChild(tr);
+
+                const option = document.createElement('option');
+                option.value = booking.id;
+                option.textContent = `Lịch đặt #${booking.id} - ${booking.service?.name || 'N/A'}`;
+                bookingSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Lỗi khi tải lịch sử đặt dịch vụ:', error.message);
+            console.error('Chi tiết lỗi:', error.response?.data);
+            console.error('Mã trạng thái:', error.response?.status);
+            const bookingHistory = document.getElementById('bookingHistory');
+            bookingHistory.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Lỗi khi tải lịch sử đặt dịch vụ</td></tr>';
+            if (error.response?.status === 401) {
+                alert('Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+                window.location.href = '/login.html';
+            } else if (error.response?.status === 403) {
+                bookingHistory.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Bạn không có quyền truy cập lịch sử đặt dịch vụ.</td></tr>';
+            }
+        }
+    }
+});
+
 
 
