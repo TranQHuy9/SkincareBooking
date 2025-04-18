@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class JwtUtil {
 
     private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 giờ
+
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
@@ -31,6 +31,8 @@ public class JwtUtil {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
+        // 30 ngày
+        long EXPIRATION_TIME = 1000L * 60L * 60L * 24L * 30L;
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
@@ -49,7 +51,7 @@ public class JwtUtil {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public List<String> extractRoles(String token) {
+    public List extractRoles(String token) {
         return extractClaim(token, claims -> claims.get("roles", List.class));
     }
 
