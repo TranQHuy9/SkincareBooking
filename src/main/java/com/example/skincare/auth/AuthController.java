@@ -9,19 +9,19 @@ import com.example.skincare.models.User;
 import com.example.skincare.repositories.RoleRepository;
 import com.example.skincare.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -44,6 +44,34 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @GetMapping("/user")
+    public User getCurrentUser(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization header is missing or invalid");
+        }
+
+        String jwt = authorizationHeader.substring(7);
+        String username;
+        try {
+            username = jwtUtil.extractUsername(jwt);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (!jwtUtil.validateToken(jwt, userDetails)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Loại bỏ các trường nhạy cảm trước khi trả về
+        user.setPassword(null);
+        user.setRoles(null);
+        return user;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterDTO registerDTO) {
@@ -77,7 +105,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        // Kiểm tra mật khẩu
         userRepository.findByUsername(loginRequest.getUsername()).ifPresent(user -> {
             boolean matches = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
             System.out.println("Password matches for " + loginRequest.getUsername() + ": " + matches);
@@ -95,24 +122,9 @@ public class AuthController {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
         String token = jwtUtil.generateToken(userDetails);
+        @SuppressWarnings("unchecked")
+        List<String> roles = jwtUtil.extractRoles(token); // Bỏ qua cảnh báo
 
-        return ResponseEntity.ok(new AuthResponse(token));
-    }
-
-    @GetMapping("/user")
-    public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String authorization) {
-        String token = authorization.replace("Bearer ", "");
-        String username = jwtUtil.extractUsername(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-        if (!jwtUtil.validateToken(token, userDetails)) {
-            return ResponseEntity.status(401).body("Invalid token");
-        }
-
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("username", username);
-        userInfo.put("roles", jwtUtil.extractRoles(token));
-
-        return ResponseEntity.ok(userInfo);
+        return ResponseEntity.ok(new AuthResponse(token, loginRequest.getUsername(), roles));
     }
 }
