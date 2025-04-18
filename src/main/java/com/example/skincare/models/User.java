@@ -9,22 +9,22 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 @Data
-public class User {
+public class    User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username")   //tên
+    @Column(name = "username")
     private String username;
 
-    @Column(name = "password")   //mật khẩu
+    @Column(name = "password")
     private String password;
 
-    @Column(name = "email")    // địa chỉ email
+    @Column(name = "email")
     private String email;
 
-    @Column(name = "full_name")  // tên đầy đủ
+    @Column(name = "full_name")
     private String fullName;
 
     @ManyToMany(fetch = FetchType.EAGER)
