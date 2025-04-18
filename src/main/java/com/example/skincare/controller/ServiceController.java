@@ -1,4 +1,5 @@
 package com.example.skincare.controller;
+
 import com.example.skincare.models.Service;
 import com.example.skincare.repositories.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,6 @@ public class ServiceController {
     @Autowired
     private ServiceRepository serviceRepository;
 
-    // Lấy danh sách tất cả dịch vụ (công khai)
     @GetMapping
     public List<Service> getAllServices() {
         return serviceRepository.findAll();

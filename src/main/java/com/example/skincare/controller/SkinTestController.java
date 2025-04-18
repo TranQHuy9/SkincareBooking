@@ -17,6 +17,12 @@ public class SkinTestController {
     @Autowired
     private SkinTestRepository skinTestRepository;
 
+    // Tạo kết quả trắc nghiệm mới (công khai, vì Guest cũng có thể làm trắc nghiệm)
+    @PostMapping
+    public SkinTest createSkinTest(@RequestBody SkinTest skinTest) {
+        return skinTestRepository.save(skinTest);
+    }
+
     // Lấy danh sách tất cả kết quả trắc nghiệm (chỉ MANAGER hoặc STAFF)
     @GetMapping
     @PreAuthorize("hasRole('MANAGER') or hasRole('STAFF')")
@@ -31,12 +37,6 @@ public class SkinTestController {
         Optional<SkinTest> skinTest = skinTestRepository.findById(id);
         return skinTest.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    // Tạo kết quả trắc nghiệm mới (công khai, vì Guest cũng có thể làm trắc nghiệm)
-    @PostMapping
-    public SkinTest createSkinTest(@RequestBody SkinTest skinTest) {
-        return skinTestRepository.save(skinTest);
     }
 
     // Cập nhật kết quả trắc nghiệm (chỉ MANAGER hoặc STAFF)
