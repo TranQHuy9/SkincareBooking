@@ -5,6 +5,7 @@ import com.example.skincare.models.Feedback;
 import com.example.skincare.repositories.BookingRepository;
 import com.example.skincare.repositories.FeedbackRepository;
 import com.example.skincare.response.FeedbackDTO;
+import com.example.skincare.response.FeedbackResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/feedbacks")
@@ -28,52 +30,93 @@ public class FeedbackController {
 
     @GetMapping
     @PreAuthorize("hasRole('MANAGER') or hasRole('STAFF')")
-    public List<Feedback> getAllFeedbacks() {
-        return feedbackRepository.findAll();
+    public List<FeedbackResponseDTO> getAllFeedbacks() {
+        List<Feedback> feedbacks = feedbackRepository.findAllWithBookingAndCustomer();
+        return feedbacks.stream().map(feedback -> {
+            FeedbackResponseDTO dto = new FeedbackResponseDTO();
+            dto.setId(feedback.getId());
+            dto.setBookingId(feedback.getBooking().getId());
+            dto.setCustomerUsername(feedback.getBooking().getCustomer().getUsername());
+            dto.setRating(feedback.getRating());
+            dto.setComment(feedback.getComment());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('MANAGER') or hasRole('STAFF') or @securityService.isOwnerOfFeedback(#id, authentication)")
-    public ResponseEntity<Feedback> getFeedbackById(@PathVariable Long id) {
+    public ResponseEntity<FeedbackResponseDTO> getFeedbackById(@PathVariable Long id) {
         Optional<Feedback> feedback = feedbackRepository.findById(id);
-        return feedback.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (feedback.isPresent()) {
+            Feedback f = feedback.get();
+            FeedbackResponseDTO dto = new FeedbackResponseDTO();
+            dto.setId(f.getId());
+            dto.setBookingId(f.getBooking().getId());
+            dto.setCustomerUsername(f.getBooking().getCustomer().getUsername());
+            dto.setRating(f.getRating());
+            dto.setComment(f.getComment());
+            return ResponseEntity.ok(dto);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/booking/{bookingId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<List<FeedbackResponseDTO>> getFeedbacksByBookingId(@PathVariable Long bookingId) {
+        // Kiểm tra quyền sở hữu booking
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy booking với ID: " + bookingId));
+        if (!booking.getCustomer().getUsername().equals(username)) {
+            return ResponseEntity.status(403).body(null);
+        }
+
+        List<Feedback> feedbacks = feedbackRepository.findByBookingId(bookingId);
+        List<FeedbackResponseDTO> feedbackDTOs = feedbacks.stream().map(feedback -> {
+            FeedbackResponseDTO dto = new FeedbackResponseDTO();
+            dto.setId(feedback.getId());
+            dto.setBookingId(feedback.getBooking().getId());
+            dto.setCustomerUsername(feedback.getBooking().getCustomer().getUsername());
+            dto.setRating(feedback.getRating());
+            dto.setComment(feedback.getComment());
+            return dto;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(feedbackDTOs);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> createFeedback(@RequestBody FeedbackDTO feedbackDTO) {
         try {
-            // Kiểm tra bookingId
             if (feedbackDTO.getBookingId() == null) {
                 return ResponseEntity.badRequest().body("Booking ID là bắt buộc.");
             }
-
-            // Kiểm tra rating
             if (feedbackDTO.getRating() == null || feedbackDTO.getRating() < 1.0 || feedbackDTO.getRating() > 5.0) {
                 return ResponseEntity.badRequest().body("Rating phải từ 1.0 đến 5.0.");
             }
-
-            // Tìm booking theo ID
             Booking booking = bookingRepository.findById(feedbackDTO.getBookingId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy booking với ID: " + feedbackDTO.getBookingId()));
-
-            // Kiểm tra quyền sở hữu
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String username = userDetails.getUsername();
             if (!booking.getCustomer().getUsername().equals(username)) {
                 return ResponseEntity.status(403).body("Bạn không có quyền gửi phản hồi cho booking này.");
             }
-
-            // Tạo Feedback mới
             Feedback feedback = new Feedback();
             feedback.setBooking(booking);
             feedback.setRating(feedbackDTO.getRating());
             feedback.setComment(feedbackDTO.getComment());
-
             Feedback savedFeedback = feedbackRepository.save(feedback);
-            return ResponseEntity.ok(savedFeedback);
+            FeedbackResponseDTO responseDTO = new FeedbackResponseDTO();
+            responseDTO.setId(savedFeedback.getId());
+            responseDTO.setBookingId(savedFeedback.getBooking().getId());
+            responseDTO.setCustomerUsername(savedFeedback.getBooking().getCustomer().getUsername());
+            responseDTO.setRating(savedFeedback.getRating());
+            responseDTO.setComment(savedFeedback.getComment());
+            return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Lỗi khi gửi phản hồi: " + e.getMessage());
         }
@@ -81,14 +124,20 @@ public class FeedbackController {
 
     @PutMapping("/{id}")
     @PreAuthorize("@securityService.isOwnerOfFeedback(#id, authentication)")
-    public ResponseEntity<Feedback> updateFeedback(@PathVariable Long id, @RequestBody Feedback updatedFeedback) {
+    public ResponseEntity<FeedbackResponseDTO> updateFeedback(@PathVariable Long id, @RequestBody FeedbackDTO feedbackDTO) {
         Optional<Feedback> feedback = feedbackRepository.findById(id);
         if (feedback.isPresent()) {
             Feedback existingFeedback = feedback.get();
-            existingFeedback.setRating(updatedFeedback.getRating());
-            existingFeedback.setComment(updatedFeedback.getComment());
-            existingFeedback.setCreatedAt(updatedFeedback.getCreatedAt());
-            return ResponseEntity.ok(feedbackRepository.save(existingFeedback));
+            existingFeedback.setRating(feedbackDTO.getRating());
+            existingFeedback.setComment(feedbackDTO.getComment());
+            Feedback updatedFeedback = feedbackRepository.save(existingFeedback);
+            FeedbackResponseDTO dto = new FeedbackResponseDTO();
+            dto.setId(updatedFeedback.getId());
+            dto.setBookingId(updatedFeedback.getBooking().getId());
+            dto.setCustomerUsername(updatedFeedback.getBooking().getCustomer().getUsername());
+            dto.setRating(updatedFeedback.getRating());
+            dto.setComment(updatedFeedback.getComment());
+            return ResponseEntity.ok(dto);
         }
         return ResponseEntity.notFound().build();
     }

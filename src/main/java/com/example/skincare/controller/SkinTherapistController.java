@@ -21,13 +21,6 @@ public class SkinTherapistController {
         return skinTherapistRepository.findAll();
     }
 
-    @GetMapping("/by-service")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('MANAGER')")
-    public ResponseEntity<List<SkinTherapist>> getTherapistsByService(@RequestParam Long serviceId) {
-        List<SkinTherapist> therapists = skinTherapistRepository.findByServicesId(serviceId);
-        return ResponseEntity.ok(therapists);
-    }
-
     @PostMapping
     @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<SkinTherapist> createTherapist(@RequestBody SkinTherapist therapist) {
