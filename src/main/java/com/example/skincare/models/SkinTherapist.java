@@ -2,7 +2,7 @@ package com.example.skincare.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonManagedReference; // Thay đổi ở đây
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,12 +28,10 @@ public class SkinTherapist {
 
     @ManyToMany
     @JoinTable(
-            name = "therapist_services",
+            name = "therapist_services", // Đã sửa từ "skin_therapist_services" thành "therapist_services"
             joinColumns = @JoinColumn(name = "therapist_id"),
             inverseJoinColumns = @JoinColumn(name = "service_id")
     )
-    @JsonManagedReference // Sử dụng @JsonManagedReference ở phía chủ sở hữu
+    @JsonManagedReference
     private Set<Service> services = new HashSet<>();
-
-    // Constructors, getters, setters (tự động tạo bởi Lombok @Data)
 }

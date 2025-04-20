@@ -7,9 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "service") // Chỉ định rõ tên bảng là "service"
+@Table(name = "service")
 public class Service {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,7 +21,6 @@ public class Service {
 
     private Integer duration;
 
-    // Constructors
     public Service() {}
 
     public Service(String name, String description, Double price, Integer duration) {
@@ -32,7 +30,6 @@ public class Service {
         this.duration = duration;
     }
 
-    // Getters and setters
     public Long getId() {
         return id;
     }

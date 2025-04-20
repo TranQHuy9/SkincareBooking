@@ -1,5 +1,6 @@
 package com.example.skincare.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,5 +38,6 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking", fetch = FetchType.EAGER)
     @JsonManagedReference
+    @JsonIgnore
     private List<Feedback> feedbacks;
 }
