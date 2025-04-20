@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book a Service - Skincare Center</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="/index.html">Skincare Center</a>
+        <a class="navbar-brand fw-bold text-primary" href="/index.html">
+            <i class="fas fa-spa me-2"></i> Skincare Center
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -20,43 +23,43 @@
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="/skin-quiz.html">Skin Quiz</a></li>
-                <li class="nav-item"><a class="nav-link" href="/booking.html">Book a Service</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/booking.html">Book a Service</a></li>
                 <li class="nav-item"><a class="nav-link" href="/therapist.html">Our Therapists</a></li>
                 <li class="nav-item"><a class="nav-link" href="/blog.html">Blog & News</a></li>
                 <li class="nav-item"><a class="nav-link" href="/profile.html">Profile</a></li>
                 <li class="nav-item"><a class="nav-link" href="/login.html">Login</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" id="logoutBtn">Logout</a></li>
+                <li class="nav-item"><a class="nav-link text-danger" href="#" id="logoutBtn">Logout</a></li>
             </ul>
         </div>
     </div>
 </nav>
 
 <!-- Booking Section -->
-<section class="py-5">
+<section class="py-5 bg-light">
     <div class="container">
-        <h2 class="text-center mb-4">Book a Skincare Service</h2>
+        <h2 class="text-center mb-5 section-title">Book a Skincare Service</h2>
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <form id="bookingForm">
                     <div class="card shadow-sm p-4">
-                        <div class="mb-3">
-                            <label for="service" class="form-label">Select Service</label>
+                        <div class="mb-4">
+                            <label for="service" class="form-label fw-bold">Select Service</label>
                             <select class="form-select" id="service" name="service" required>
                                 <option value="" disabled selected>Select a service</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="therapist" class="form-label">Select Therapist (Optional)</label>
+                        <div class="mb-4">
+                            <label for="therapist" class="form-label fw-bold">Select Therapist (Optional)</label>
                             <select class="form-select" id="therapist" name="therapist">
                                 <option value="">No preference</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="date" class="form-label">Select Date</label>
+                        <div class="mb-4">
+                            <label for="date" class="form-label fw-bold">Select Date</label>
                             <input type="date" class="form-control" id="date" name="date" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="time" class="form-label">Select Time</label>
+                        <div class="mb-4">
+                            <label for="time" class="form-label fw-bold">Select Time</label>
                             <select class="form-select" id="time" name="time" required>
                                 <option value="" disabled selected>Select a time</option>
                             </select>
@@ -64,11 +67,44 @@
                         <button type="submit" class="btn btn-primary w-100">Book Now</button>
                     </div>
                 </form>
-                <div id="bookingMessage" style="display: none;"></div>
+                <div id="bookingMessage" class="mt-4" style="display: none;"></div>
             </div>
         </div>
     </div>
 </section>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h5 class="fw-bold">Skincare Center</h5>
+                <p>We are dedicated to providing the best skincare services to help you achieve radiant, healthy skin.</p>
+            </div>
+            <div class="col-md-4">
+                <h5 class="fw-bold">Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/index.html" class="text-white text-decoration-none">Home</a></li>
+                    <li><a href="/booking.html" class="text-white text-decoration-none">Book a Service</a></li>
+                    <li><a href="/therapist.html" class="text-white text-decoration-none">Our Therapists</a></li>
+                    <li><a href="/blog.html" class="text-white text-decoration-none">Blog & News</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h5 class="fw-bold">Follow Us</h5>
+                <div class="social-icons">
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <p>© 2025 Skincare Center. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

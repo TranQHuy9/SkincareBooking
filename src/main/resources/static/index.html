@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skincare Center - Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/style.css">
-
 </head>
 <body>
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="/index.html">Skincare Center</a>
+        <a class="navbar-brand fw-bold text-primary" href="/index.html">
+            <i class="fas fa-spa me-2"></i> Skincare Center
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -26,26 +28,26 @@
                 <li class="nav-item"><a class="nav-link" href="/dashboard.html" id="dashboardLink">Dashboard</a></li>
                 <li class="nav-item"><a class="nav-link" href="/profile.html">Profile</a></li>
                 <li class="nav-item"><a class="nav-link" href="/login.html">Login</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" id="logoutBtn">Logout</a></li>
+                <li class="nav-item"><a class="nav-link text-danger" href="#" id="logoutBtn">Logout</a></li>
             </ul>
         </div>
     </div>
 </nav>
 
 <!-- Hero Section -->
-<section class="bg-light py-5">
-    <div class="container text-center">
-        <h1 class="display-4">Welcome to Skincare Center</h1>
-        <p class="lead">Your trusted destination for radiant, healthy skin.</p>
-        <div id="loginMessage" style="display: none;"></div>
-        <a href="/skin-quiz.html" class="btn btn-primary btn-lg mt-3">Take Our Skin Quiz</a>
+<section class="hero-section text-center text-white">
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold animate__animated animate__fadeIn">Welcome to Skincare Center</h1>
+        <p class="lead animate__animated animate__fadeIn animate__delay-1s">Your trusted destination for radiant, healthy skin.</p>
+        <div id="loginMessage" class="mt-3" style="display: none;"></div>
+        <a href="/skin-quiz.html" class="btn btn-primary btn-lg mt-3 animate__animated animate__fadeIn animate__delay-2s">Take Our Skin Quiz</a>
     </div>
 </section>
 
 <!-- Services Section -->
-<section class="py-5">
+<section class="py-5 bg-light">
     <div class="container">
-        <h2 class="text-center mb-4">Our Skincare Services</h2>
+        <h2 class="text-center mb-5 section-title">Our Skincare Services</h2>
         <div class="row" id="servicesList">
             <!-- Services will be populated dynamically -->
         </div>
@@ -53,9 +55,9 @@
 </section>
 
 <!-- Therapists Section -->
-<section class="bg-light py-5">
+<section class="py-5">
     <div class="container">
-        <h2 class="text-center mb-4">Meet Our Therapists</h2>
+        <h2 class="text-center mb-5 section-title">Meet Our Therapists</h2>
         <div class="row" id="therapistsList">
             <!-- Therapists will be populated dynamically -->
         </div>
@@ -66,9 +68,9 @@
 </section>
 
 <!-- Blog & News Section -->
-<section class="py-5">
+<section class="py-5 bg-light">
     <div class="container">
-        <h2 class="text-center mb-4">Blog & News</h2>
+        <h2 class="text-center mb-5 section-title">Blog & News</h2>
         <div class="row" id="blogList">
             <!-- Blog posts will be populated dynamically -->
         </div>
@@ -80,13 +82,40 @@
 
 <!-- Footer -->
 <footer class="bg-dark text-white py-4">
-    <div class="container text-center">
-        <p>&copy; 2025 Skincare Center. All rights reserved.</p>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <h5 class="fw-bold">Skincare Center</h5>
+                <p>We are dedicated to providing the best skincare services to help you achieve radiant, healthy skin.</p>
+            </div>
+            <div class="col-md-4">
+                <h5 class="fw-bold">Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/index.html" class="text-white text-decoration-none">Home</a></li>
+                    <li><a href="/booking.html" class="text-white text-decoration-none">Book a Service</a></li>
+                    <li><a href="/therapist.html" class="text-white text-decoration-none">Our Therapists</a></li>
+                    <li><a href="/blog.html" class="text-white text-decoration-none">Blog & News</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h5 class="fw-bold">Follow Us</h5>
+                <div class="social-icons">
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <p>&copy; 2025 Skincare Center. All rights reserved.</p>
+        </div>
     </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.js"></script>
 <script src="/script.js"></script>
 </body>
 </html>

@@ -367,15 +367,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const serviceSelect = document.getElementById('service');
-        if (!serviceSelect) {
-            console.error('Không tìm thấy phần tử dropdown với id="service"');
+        // Kiểm tra token hết hạn
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Math.floor(Date.now() / 1000);
+            if (payload.exp < currentTime) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+                window.location.href = '/login.html';
+                return;
+            }
+        } catch (e) {
+            console.error('Lỗi khi giải mã token:', e);
+            alert('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('role');
+            window.location.href = '/login.html';
             return;
         }
 
+        const serviceSelect = document.getElementById('service');
         const therapistSelect = document.getElementById('therapist');
-        if (!therapistSelect) {
-            console.error('Không tìm thấy phần tử dropdown với id="therapist"');
+        const dateInput = document.getElementById('date');
+        const timeInput = document.getElementById('time');
+
+        if (!serviceSelect || !therapistSelect || !dateInput || !timeInput) {
+            console.error('Không tìm thấy các phần tử cần thiết trên form');
             return;
         }
 
@@ -410,7 +430,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 );
                 if (matchingOption) {
                     serviceSelect.value = matchingOption.value;
-                    serviceSelect.dispatchEvent(new Event('change'));
                 } else {
                     console.warn(`Không tìm thấy dịch vụ "${recommendedService}" trong danh sách`);
                 }
@@ -428,9 +447,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Cập nhật danh sách therapist khi chọn dịch vụ
-        serviceSelect.addEventListener('change', async function () {
-            const serviceId = this.value;
+        // Tải danh sách khung giờ
+        timeInput.innerHTML = '<option value="" disabled selected>Select a time</option>';
+        const times = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+        times.forEach(time => {
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            timeInput.appendChild(option);
+        });
+
+        // Hàm cập nhật danh sách chuyên viên
+        const updateTherapists = async () => {
+            const serviceId = serviceSelect.value;
             therapistSelect.innerHTML = '<option value="">No preference</option>';
 
             if (!serviceId) {
@@ -438,18 +467,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            const date = dateInput.value;
+            const time = timeInput.value;
+            if (!date || !time) {
+                console.warn('Ngày hoặc giờ chưa được chọn');
+                therapistSelect.innerHTML = '<option value="">Please select date and time</option>';
+                return;
+            }
+
+            // Chuyển đổi định dạng ngày từ YYYY-MM-DD sang YYYY-MM-DD (đã đúng định dạng)
+            const [year, month, day] = date.split('-');
+            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            const bookingTime = `${formattedDate}T${time}:00`;
+
             try {
-                console.log(`Gọi API để lấy danh sách therapist cho serviceId: ${serviceId}`);
-                const response = await axios.get(`http://localhost:8090/api/therapists/by-service?serviceId=${serviceId}`, {
+                console.log(`Gọi API để lấy danh sách therapist cho serviceId: ${serviceId}, bookingTime: ${bookingTime}`);
+                const response = await axios.get(`http://localhost:8090/api/therapists/by-service?serviceId=${serviceId}&bookingTime=${bookingTime}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                const therapists = response.data;
+
+                const therapists = response.data || []; // Đảm bảo therapists là mảng rỗng nếu không có dữ liệu
 
                 console.log('Danh sách therapist trả về:', therapists);
 
                 if (!Array.isArray(therapists) || therapists.length === 0) {
-                    console.warn(`Không có therapist nào cho serviceId: ${serviceId}`);
-                    therapistSelect.innerHTML = '<option value="">No therapists available</option>';
+                    console.warn(`Không có therapist nào khả dụng cho serviceId: ${serviceId} tại thời điểm: ${bookingTime}`);
+                    therapistSelect.innerHTML = '<option value="">No therapists available at this time</option>';
                     return;
                 }
 
@@ -466,30 +509,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 therapistSelect.innerHTML = '<option value="">Error loading therapists</option>';
                 if (error.response?.status === 401 || error.response?.status === 403) {
                     console.warn('Quyền truy cập bị từ chối. Chuyển hướng về login.html');
+                    alert('Phiên đăng nhập không hợp lệ hoặc bạn không có quyền truy cập. Vui lòng đăng nhập lại.');
                     localStorage.removeItem('token');
                     localStorage.removeItem('username');
                     localStorage.removeItem('role');
                     setTimeout(() => (window.location.href = '/login.html'), 2000);
                 }
             }
-        });
+        };
 
-        // Tải danh sách khung giờ
-        const timeSelect = document.getElementById('time');
-        if (!timeSelect) {
-            console.error('Không tìm thấy phần tử dropdown với id="time"');
-            return;
+        // Gắn sự kiện change cho service, date và time
+        serviceSelect.addEventListener('change', updateTherapists);
+        dateInput.addEventListener('change', updateTherapists);
+        timeInput.addEventListener('change', updateTherapists);
+
+        // Tự động gọi updateTherapists nếu đã có service được chọn từ query parameter
+        if (serviceSelect.value) {
+            updateTherapists();
         }
-        timeSelect.innerHTML = '<option value="" disabled selected>Select a time</option>';
-        const times = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
-        times.forEach(time => {
-            const option = document.createElement('option');
-            option.value = time;
-            option.textContent = time;
-            timeSelect.appendChild(option);
-        });
 
-// Xử lý form đặt lịch
+        // Xử lý form đặt lịch
         document.getElementById('bookingForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const serviceId = document.getElementById('service').value;
@@ -502,34 +541,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            if (!therapistId) {
-                alert('Vui lòng chọn một chuyên viên.');
-                return;
-            }
+            // Cho phép không chọn chuyên viên (No preference)
+            const [year, month, day] = date.split('-');
+            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            const bookingTime = `${formattedDate}T${time}:00`;
 
-            // Kiểm tra serviceId có hợp lệ không
-            if (isNaN(serviceId) || serviceId <= 0) {
-                alert('ID dịch vụ không hợp lệ. Vui lòng chọn lại dịch vụ.');
-                return;
-            }
-
-            // Kiểm tra therapistId có hợp lệ không
-            if (isNaN(therapistId) || therapistId <= 0) {
-                alert('ID chuyên viên không hợp lệ. Vui lòng chọn lại chuyên viên.');
-                return;
-            }
-
-            const bookingTime = `${date}T${time}:00`;
             try {
                 console.log('Gửi yêu cầu đặt lịch với payload:', {
                     serviceId: serviceId,
-                    therapistId: therapistId,
+                    therapistId: therapistId || null,
                     bookingTime: bookingTime,
                     status: "PENDING"
                 });
                 const response = await axios.post('http://localhost:8090/api/bookings', {
                     serviceId: serviceId,
-                    therapistId: therapistId, // Thêm therapistId vào payload
+                    therapistId: therapistId || null,
                     bookingTime: bookingTime,
                     status: "PENDING"
                 }, {
@@ -578,7 +604,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
-
 // Therapist.html: Tải và quản lý chuyên viên
 document.addEventListener('DOMContentLoaded', async () => {
     if (window.location.pathname.endsWith('therapist.html')) {
@@ -694,13 +719,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             const bookingHistory = document.getElementById('bookingHistory');
             const bookingSelect = document.getElementById('bookingId');
             bookingSelect.innerHTML = '<option value="" disabled selected>Chọn lịch đặt</option>';
-            response.data.forEach(booking => {
-                const feedback = booking.feedbacks && booking.feedbacks.length > 0 ? booking.feedbacks[0].comment : 'Chưa có phản hồi';
+            for (const booking of response.data) {
+                // Lấy thông tin phản hồi (nếu có) bằng cách gọi API phụ
+                let feedback = 'Chưa có phản hồi';
+                try {
+                    const feedbackResponse = await axios.get(`http://localhost:8090/api/feedbacks/booking/${booking.id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (feedbackResponse.data && feedbackResponse.data.length > 0) {
+                        feedback = feedbackResponse.data[feedbackResponse.data.length - 1].comment;
+                    }
+                } catch (error) {
+                    console.error(`Không thể lấy phản hồi cho booking ${booking.id}:`, error.message);
+                    console.error('Chi tiết lỗi:', error.response?.data);
+                    console.error('Mã trạng thái:', error.response?.status);
+                    if (error.response?.status === 403) {
+                        feedback = 'Không có quyền xem phản hồi';
+                    }
+                }
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${booking.id}</td>
-                    <td>${booking.service?.name || 'N/A'}</td>
-                    <td>${booking.therapist?.fullName || 'Chưa phân công'}</td>
+                    <td>${booking.serviceName || 'N/A'}</td>
+                    <td>${booking.therapistFullName || 'Chưa phân công'}</td>
                     <td>${new Date(booking.bookingTime).toLocaleString() || 'N/A'}</td>
                     <td>${booking.status}</td>
                     <td>${feedback}</td>
@@ -709,9 +751,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const option = document.createElement('option');
                 option.value = booking.id;
-                option.textContent = `Lịch đặt #${booking.id} - ${booking.service?.name || 'N/A'}`;
+                option.textContent = `Lịch đặt #${booking.id} - ${booking.serviceName || 'N/A'}`;
                 bookingSelect.appendChild(option);
-            });
+            }
 
             // Xử lý form gửi phản hồi
             const feedbackForm = document.getElementById('feedbackForm');
@@ -720,7 +762,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     e.preventDefault();
                     const bookingId = document.getElementById('bookingId').value;
                     const rating = document.getElementById('rating').value;
-                    const comment = document.getElementById('feedback').value; // Sửa từ 'comment' thành 'feedback'
+                    const comment = document.getElementById('feedback').value;
 
                     if (!bookingId || !rating || !comment) {
                         const feedbackMessage = document.getElementById('feedbackMessage');
@@ -733,7 +775,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try {
                         const response = await axios.post('http://localhost:8090/api/feedbacks', {
                             bookingId: parseInt(bookingId),
-                            rating: parseFloat(rating), // Chuyển đổi rating thành số
+                            rating: parseFloat(rating),
                             comment: comment
                         }, {
                             headers: { Authorization: `Bearer ${token}` }
@@ -782,49 +824,51 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/login.html';
             return;
         }
+        const totalBookingsElement = document.getElementById('totalBookings');
+        const totalRevenueElement = document.getElementById('totalRevenue');
+        const averageRatingElement = document.getElementById('averageRating');
+        const bookingList = document.getElementById('bookingsList');
+        const recentFeedback = document.getElementById('recentFeedback');
+
         try {
-            // Tải dữ liệu dashboard (Total Bookings, Total Revenue, Average Rating)
-            const response = await axios.get('http://localhost:8090/api/dashboard', {
+            // Fetch all dashboard data from /api/dashboard
+            const dashboardResponse = await axios.get('http://localhost:8090/api/dashboard', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            document.getElementById('totalBookings').textContent = response.data.totalBookings;
-            document.getElementById('totalRevenue').textContent = `$${response.data.totalRevenue}`;
-            document.getElementById('averageRating').textContent = response.data.averageRating;
+            console.log('Dashboard Response Data:', dashboardResponse.data);
 
-            const recentFeedback = document.getElementById('recentFeedback');
-            response.data.recentFeedback.forEach(feedback => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${feedback.bookingId}</td>
-                    <td>${feedback.customer}</td>
-                    <td>${feedback.rating}</td>
-                    <td>${feedback.feedback}</td>
+            // Update summary metrics
+            totalBookingsElement.textContent = dashboardResponse.data.totalBookings || 0;
+            totalRevenueElement.textContent = `$${dashboardResponse.data.totalRevenue || 0}`;
+            averageRatingElement.textContent = dashboardResponse.data.averageRating.toFixed(1) || 0.0;
+
+            // Update Recent Feedback table
+            if (dashboardResponse.data.recentFeedback.length === 0) {
+                recentFeedback.innerHTML = `<tr><td colspan="4" class="text-center">Không có phản hồi nào.</td></tr>`;
+            } else {
+                dashboardResponse.data.recentFeedback.forEach(feedback => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td>${feedback.bookingId || 'N/A'}</td>
+                    <td>${feedback.customerUsername || 'N/A'}</td>
+                    <td>${feedback.rating || 'N/A'}</td>
+                    <td>${feedback.comment || 'Không có phản hồi'}</td>
                 `;
-                recentFeedback.appendChild(tr);
-            });
-
-            // Tải danh sách tất cả lịch đặt (Manage Bookings)
-            const bookingsResponse = await axios.get('http://localhost:8090/api/bookings/all', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const bookingList = document.getElementById('bookingsList');
-            if (!bookingList) {
-                console.error('Không tìm thấy phần tử bookingsList trong dashboard.html');
-                return;
+                    recentFeedback.appendChild(tr);
+                });
             }
 
-            if (bookingsResponse.data.length === 0) {
+            // Update Manage Bookings table
+            if (dashboardResponse.data.bookings.length === 0) {
                 bookingList.innerHTML = `<tr><td colspan="7" class="text-center">Không có lịch đặt nào.</td></tr>`;
-                return;
-            }
-
-            bookingsResponse.data.forEach(booking => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+            } else {
+                dashboardResponse.data.bookings.forEach(booking => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
                     <td>${booking.id}</td>
-                    <td>${booking.customer?.username || 'N/A'}</td>
-                    <td>${booking.service?.name || 'N/A'}</td>
-                    <td>${booking.therapist?.fullName || 'Chưa phân công'}</td>
+                    <td>${booking.customerUsername || 'N/A'}</td>
+                    <td>${booking.serviceName || 'N/A'}</td>
+                    <td>${booking.therapistFullName || 'Chưa phân công'}</td>
                     <td>${new Date(booking.bookingTime).toLocaleString() || 'N/A'}</td>
                     <td>${booking.status}</td>
                     <td>
@@ -833,26 +877,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${booking.status === 'PENDING' || booking.status === 'CHECKED_IN' ? `<button class="btn btn-sm btn-danger" onclick="cancelBooking(${booking.id})">Cancel</button>` : ''}
                     </td>
                 `;
-                bookingList.appendChild(tr);
-            });
+                    bookingList.appendChild(tr);
+                });
+            }
         } catch (error) {
             console.error('Lỗi khi tải dữ liệu dashboard:', error.message);
             console.error('Chi tiết lỗi:', error.response?.data);
             console.error('Mã trạng thái:', error.response?.status);
-            const dashboardContent = document.getElementById('dashboardContent');
-            if (dashboardContent) {
-                dashboardContent.innerHTML = '<div class="alert alert-danger">Lỗi khi tải dữ liệu dashboard</div>';
-            }
-            if (error.response?.status === 401) {
-                alert('Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.');
+            if (error.response?.status === 401 || error.response?.status === 403) {
                 localStorage.removeItem('token');
-                localStorage.removeItem('username');
-                localStorage.removeItem('role');
                 window.location.href = '/login.html';
-            } else if (error.response?.status === 403) {
-                if (dashboardContent) {
-                    dashboardContent.innerHTML = '<div class="alert alert-danger">Bạn không có quyền truy cập dashboard.</div>';
-                }
             }
         }
     }
