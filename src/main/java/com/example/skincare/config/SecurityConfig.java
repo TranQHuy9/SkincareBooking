@@ -49,8 +49,9 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/", "/index.html", "/login.html", "/register.html", "/style.css", "/script.js", "/skin-quiz.html", "/blog.html", "/booking.html", "/dashboard.html", "/profile.html", "/therapist.html", "/user.html").permitAll()
                         .requestMatchers("/api/auth/**", "/api/public/**", "/favicon.ico").permitAll()
-                        .requestMatchers("/api/therapists/by-service").permitAll()
                         .requestMatchers("/api/services/**").permitAll()
+                        .requestMatchers("/api/therapists/by-service").hasRole("CUSTOMER")
+                        .requestMatchers("/api/bookings").hasRole("CUSTOMER")
                         .requestMatchers("/api/bookings/all").hasAnyRole("STAFF", "MANAGER")
                         .requestMatchers("/api/bookings/{id}/checkin", "/api/bookings/{id}/checkout").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/bookings/{id}/cancel").hasAnyRole("MANAGER", "STAFF")
@@ -59,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/therapist/**").hasRole("THERAPIST")
                         .requestMatchers("/api/staff/**").hasRole("STAFF")
                         .requestMatchers("/api/manager/**").hasRole("MANAGER")
-                        .requestMatchers("/api/feedbacks/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/feedbacks/**").hasAnyRole("STAFF", "MANAGER", "CUSTOMER")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -73,7 +74,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8090", "http://localhost:3000")); // Thêm port frontend nếu cần
+        configuration.setAllowedOrigins(List.of("http://localhost:8090", "http://localhost:3000", "http://localhost:8080")); // Thêm port frontend nếu cần
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
